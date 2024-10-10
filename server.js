@@ -5,6 +5,8 @@ const path = require('path');
 const cors = require('cors');
 
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -17,27 +19,21 @@ const CLIENT_SECRET = process.env.BCA_CLIENT_SECRET;
 
 const getToken = async () => {
     const url = 'https://sandbox.bca.co.id/api/oauth/token';
-    const headers = {
-        'Content-Type': 'application/x-www-form-urlencoded',
+    const headers = { 
+        'Content-Type': 'application/x-www-form-urlencoded' 
     };
-
-    const body = new URLSearchParams({
-        'grant_type': 'client_credentials',
-    });
+    const body = new URLSearchParams({ 'grant_type': 'client_credentials' });
 
     try {
         const response = await axios.post(url, body, {
             headers,
-            auth: {
-                username: CLIENT_ID,
-                password: CLIENT_SECRET,
-            },
+            auth: { username: CLIENT_ID, password: CLIENT_SECRET },
         });
 
         accessToken = response.data.access_token;
         tokenExpiry = Date.now() + (response.data.expires_in * 1000);
     } catch (error) {
-        console.error('Error getting token:', error.response ? error.response.data : error.message);
+        console.error('Error getting token:', error?.response?.data || error.message);
         throw new Error('Gagal mendapatkan token');
     }
 };
@@ -57,18 +53,13 @@ const getMutasiBCA = async (accountNumber, startDate, endDate) => {
         'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
     };
-
-    const body = {
-        accountNumber,
-        startDate,
-        endDate,
-    };
+    const body = { accountNumber, startDate, endDate };
 
     try {
         const response = await axios.post(url, body, { headers });
         return response.data;
     } catch (error) {
-        console.error('Error fetching mutasi:', error.response ? error.response.data : error.message);
+        console.error('Error fetching mutasi:', error?.response?.data || error.message);
         throw new Error('Gagal mengambil mutasi');
     }
 };
@@ -81,7 +72,7 @@ const validateInput = (req, res, next) => {
     if (!accountNumberPattern.test(accountNumber)) {
         return res.status(400).json({ error: 'Nomor akun tidak valid.' });
     }
-    
+
     if (new Date(startDate) >= new Date(endDate)) {
         return res.status(400).json({ error: 'Tanggal akhir harus lebih besar dari tanggal mulai.' });
     }
@@ -107,7 +98,6 @@ app.get('/', (req, res) => {
 });
 
 // Memulai server
-const PORT = 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
